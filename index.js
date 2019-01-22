@@ -3,16 +3,18 @@
 import { Navigation } from 'react-native-navigation';
 import {registerScreens} from './src/screens';
 import App from './App';
-import Index from './src/components/Home';
+import Home from './src/components/Home';
+import Favorites from './src/components/Favorites';
+import Initializing from './src/components/Initializing';
 import { AppRegistry } from 'react-native';
 
 
-AppRegistry.registerComponent('weather', () => Index);
+AppRegistry.registerComponent('weather', () => Home);
 
 
-  Navigation.registerComponent('Home', () => require('./src/components/Home/index'));
-  Navigation.registerComponent('Favorites', () => require('./src/components/Favorites/index'));
-  Navigation.registerComponent('Initializing', (sc) => require('./src/components/Initializing/index'));
+Navigation.registerComponent('Home', () => Home);
+Navigation.registerComponent('Favorites', () => Favorites);
+Navigation.registerComponent('Initializing', (sc) => Initializing);
 
 //Navigation.registerComponent(`Initializing`, () => App);
 

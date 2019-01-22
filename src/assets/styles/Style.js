@@ -34,28 +34,6 @@ export const favorites = {
 		marginTop: 10,
 		marginLeft: 10,
 	},
-	footer:{
-	backgroundColor: 'red',
-	flexDirection: 'row',
-	justifyContent: 'center',
-	width: '100%',
-	height: 55,
-	borderTopWidth: 1,
-	borderColor: 'black',
-},
-button: {
-	flex:1,
-	flexDirection: 'row',
-	alignItems: 'center',
-	justifyContent: 'center',
-
-
-},
-cancelButton : {
-	 width: 20,
-	 height: 20,
-
-},
 	icon: {"display":"inline-block","backgroundRepeat":"no-repeat","backgroundPosition":"center","width":25,"minHeight":"23px","marginRight":"15px","position":"relative","top":"6px"},
 	loc_item: {
 		flexWrap: 'wrap',
@@ -109,6 +87,40 @@ export const styles = {
 				marginLeft: 10,
 				marginRight: 10
 			},
+			pollution_card: {
+				backgroundColor: '#eeeeee',
+				height: 240,
+				marginTop: 25,
+			},
+			pollution_status: {
+				flexDirection: 'row',
+				flexWrap: 'wrap',
+				flex: 1,
+				marginTop: 15,
+				marginTop: 5,
+			},
+			pollution_status_badge: {
+				fontSize: 14,
+				fontWeight: 'bold',
+				marginTop: 5,
+			},
+			pollution_info: {
+				flex: 1,
+				marginLeft: 20,
+				overflow: 'hidden'
+			},
+			pollution_status_text: {
+				fontSize: 22,
+			},
+			pollution_card_info: {
+				margin: 25,
+			},
+			pollution_heading: {
+				fontSize: 34,
+				fontFamily: "System",
+				color: 'black',
+				fontWeight: 'bold'
+			},
       weather_hourly_info: {
         marginTop: 10,
         flexDirection: 'column'
@@ -150,6 +162,10 @@ export const styles = {
 			info_days_title: {
 				alignSelf: "center",
 				fontSize: 14
+			},
+			pollution_icon: {
+				width: 105,
+				height: 105,
 			},
 			info_days_icon: {
 				marginTop: 5,

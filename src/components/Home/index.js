@@ -22,6 +22,7 @@ import {
     AppRegistry
 } from "react-native";
 import { List, ListItem } from 'react-native-elements';
+import {Navigation} from "react-native-navigation";
 import MapView from "react-native-maps";
 import Geocoder from "react-native-geocoding";
 import InlineImage from "../../dependencies/InlineImage.js";
@@ -29,20 +30,19 @@ import Image from "react-native-remote-svg";
 import { BoxShadow } from "react-native-shadow";
 import { styles } from '../../assets/styles/Style';
 const remote = "../../assets/MobilePortrait.svg";
-import {Navigation} from "react-native-navigation";
 const Dimensions = require("Dimensions");
 const window = Dimensions.get("window");
 const { height, width } = Dimensions.get("window");
 const itemWidth = (width - 20) / 3;
 import { IMAGES, WEEKDAYS, MONTHS } from '../../config/values';
 import { shadowOpt, values, colors } from '../../assets/styles/StyleValues';
-import { API_KEY, API_URL, GEO_API_KEY } from '../../config/service'
+import { API_KEY, API_URL, GEO_API_KEY, AIR_API_KEY } from '../../config/service'
 type Props = {};
 
 /* YellowBox renders warnings at the bottom of the app being developed. */
 console.disableYellowBox = true;
 
-/* temporary variables [todo] */
+/* temporary variables */
 var listData = [],
     temperaturesData = [],
     hourlyData = [];
@@ -55,17 +55,16 @@ Geocoder.init(GEO_API_KEY);
    The React.Component class that App inherits,
    has several methods is called at different points in the life cycle of the React component.
 */
-export default class Home extends Component {
+export default class Home extends Component<Props> {
+
 
   goToScreen = (screenName) => {
-  Navigation.push(this.props.componentId,{
-    component: {
-      name: screenName
-    }
-  })
-}
-
-
+    Navigation.push(this.props.componentId,{
+      component: {
+        name: screenName
+      }
+    })
+  }
 
     /* Triggers new screen to display weather details for a chosen day. */
     onViewMore = (user) => {
@@ -77,8 +76,6 @@ export default class Home extends Component {
         this.dataSource = new ListView.DataSource({
             rowHasChanged: (r1, r2) => r1 !== r2
         });
-
-        /* temporary states [todo] */
         this.state = {
             text: "",
             refreshing: false,
@@ -92,7 +89,9 @@ export default class Home extends Component {
             summary: null,
             longitude: null,
             currentlyIcon: null,
-            dataSource: null
+            dataSource: null,
+            country: "Poland",
+            city: "Tarnow"
         };
         this.rows = [];
     }
@@ -211,6 +210,15 @@ export default class Home extends Component {
         );
     };
 
+    getHealthStatus = (aqi) => {
+      if (aqi>=0 && aqi<=50) return { status: "Dobra", icon: "ic-face-1-green" };
+      else if (aqi>50 && aqi<=100) return { status: "Średnia", icon: "ic-face-2-yellow" };
+      else if (aqi>100 && aqi<=150) return { status: "Niezdrowa dla osób wrażliwych", icon: "ic-face-3-orange" };
+      else if (aqi>151 && aqi<=200) return { status: "Niezdrowa", icon: "ic-face-4-red" };
+      else if (aqi>201 && aqi<=300) return { status: "Bardzo Niezdrowa", icon: "ic-face-4-red" };
+      else return { status: "Zagrożenie dla życia", icon: "ic-face-4-red" };
+    }
+
     getHourlyData = (element, index, array) => {
         if (index > 24) return;
         hourlyData.push({
@@ -232,121 +240,143 @@ export default class Home extends Component {
                 this.setState({
                     latitude:50.016748, //position.coords.latitude,
                     longitude: 20.990469,//position.coords.longitude,
-                    error: null
+                    error: null,
                 });
-                console.log("my latitude: ", this.state.latitude, this.state.longitude);
-                return fetch(
-                    API_URL +
-                    API_KEY +
-                    "/" +
-                    this.state.latitude +
-                    "," +
-                    this.state.longitude +
-                    "?lang=pl&units=auto"
-                )
+                /*
+                Co to jest AQI?
+
+                Wskaźnik jakości powietrza (AQI) - system służący do przeliczania mylących lub nieintuicyjnych pomiarów stężenia zanieczyszczeń na jedną,
+                łatwą do zrozumienia skalę, w celu wyraźnego odzwierciedlenia ryzyka dla zdrowia wynikającego z zanieczyszczenia powietrza atmosferycznego.
+                Formuła wskaźnika uwzględnia zwykle do 6 głównych zanieczyszczeń
+                (PM2,5, PM10, tlenek węgla, dwutlenek siarki, dwutlenek azotu i ozon w warstwie przyziemnej)
+                i oblicza odpowiednie ryzyko zdrowotne (lub wskaźnik AQI) dla każdego z nich w danym momencie.
+                Ogólna liczba AQI w danym momencie jest dyktowana przez "najbardziej ryzykowną" substancję zanieczyszczającą, o najwyższym AQI.
+
+                Standardy:
+                0-50, “Good” - Dobra
+                  Jakość powietrza jest uznawana za zadowalającą, a zanieczyszczenie powietrza stanowi niewielkie ryzyko lub jego brak.
+                51-100, “Moderate” //Średnia
+                  Jakość powietrza jest dopuszczalna; jednak niektóre zanieczyszczenia mogą być umiarkowanie szkodliwe
+                  dla bardzo małej liczby osób, które są niezwykle wrażliwe na zanieczyszczenie powietrza.
+                101-150, “Unhealthy for Sensitive Groups” //Niezdrowa dla osób wrażliwych
+                  Niezdrowe dla wrażliwych osób - u osób wrażliwych mogą wystąpić negatywne skutki dla zdrowia.
+                  Większość populacji może nie odczuwać negatywnych objawów.
+                151-200, “Unhealthy” //Niezdrowa
+                  Każdy może zacząć doświadczać negatywnych skutków zdrowotnych;
+                  U osób wrażliwych mogą wystąpić poważniejsze skutki zdrowotne.
+                201-300, “Very Unhealthy” //Bardzo niezdrowa
+                  Ostrzeżenie zdrowotne, poziom alarmowy. Bardzo prawdopodobny negatywny wpływ na całą populację.
+                301-500+, “Hazardous” //Zagrożenie dla życia
+                  Alarm Zdrowotny: każdy może doświadczyć poważniejszych skutków zdrowotnych.
+
+                  "p2": "ugm3", //pm2.5
+                  "p1": "ugm3", //pm10
+                */
+
+/*
+                fetch(`http://api.airvisual.com/v2/nearest_station?lat=50.016748&lon=20.990469&key=${AIR_API_KEY}`)
                     .then(response => response.json())
                     .then(responseJson => {
-                        listData = [];
-                        temperaturesData = [];
-                        console.log(responseJson);
-                        responseJson.daily.data.forEach(element => {
-                            temperaturesData.push({
-                                day: this.getWeekDay(element.time),
-                                icon: element.icon,
-                                temperature: Math.round(element.apparentTemperatureHigh)
-                            });
-                        });
-                        hourlyData = [];
-                        responseJson.hourly.data.forEach(this.getHourlyData);
+                      console.log(responseJson)
+                      this.setState({
+                          co: 5
+                      });
+                  });
 
-                        rows = this.dataSource.cloneWithRows(hourlyData);
+*/
 
-                        let today = responseJson.daily.data[0];
-
-                        let todaySummaryHorizontalList = [
-                            this.timestampToHours(today.sunriseTime),
-                            this.timestampToHours(today.sunsetTime),
-                            Math.round(today.pressure),
-                            today.windSpeed,
-                            Math.round(today.cloudCover * 100),
-                            today.humidity * 100,
-                            Math.round(today.temperatureHigh)
-                        ];
-                        let todaySummaryHorizontalListNames = [
-                            "Wschód słońca",
-                            "Zachód słońca",
-                            "Ciśnienie",
-                            "Wiatr",
-                            "Zachmurzenie",
-                            "Wilgotność",
-                            "Temperatura maks."
-                        ];
-                        let units = ["", "", "hPa", "km/h", "%", "%", "°C"];
-                        for (let element in todaySummaryHorizontalList) {
-                            let object = {
-                                name: todaySummaryHorizontalListNames[element],
-                                value: todaySummaryHorizontalList[element],
-                                unit: units[element]
-                            };
-                            listData.push(object);
-                        }
-
-                        Geocoder.from(this.state.latitude, this.state.longitude)
-                            .then(json => {
-                                var formatted_address = json.results[0].address_components;
-                                console.log(
-                                    "DEBUG: MOJA LOKALIZACJA: " +
-                                    formatted_address[5].long_name +
-                                    ", " +
-                                    formatted_address[2].long_name +
-                                    ", " +
-                                    formatted_address[1].long_name +
-                                    ", " +
-                                    formatted_address[0].long_name
-                                );
-                                this.setState({
-                                    country: formatted_address[5].long_name,
-                                    city: formatted_address[2].long_name,
-                                    street: formatted_address[1].long_name,
-                                    number: formatted_address[0].long_name
-                                });
-                            })
-                            .catch(error => console.warn(error));
-                        this.setState(
-                            {
-                                isLoading: false,
-                                refreshing: false,
-                                dataSource: responseJson.hourly.data,
-                                datat: responseJson.daily.summary,
-                                summary: responseJson.currently.summary,
-                                temperature: responseJson.currently.temperature,
-                                cloudCover: responseJson.currently.cloudCover,
-                                humidity: responseJson.currently.humidity,
-                                pressure: responseJson.currently.pressure,
-                                windGust: responseJson.currently.windGust,
-                                windSpeed: responseJson.currently.windSpeed,
-                                currentlyIcon: responseJson.daily.icon,
-                                forecast: responseJson.daily.data[1].summary + " Jutro " + responseJson.daily.data[2].summary,
-                                isNight: false//responseJson.currently.icon.indexOf("night") !== -1
-                            },
-                            function () {
-                                console.log("Done.");
-                            }
-                        );
-                    })
-                    .catch(error => {
-                        console.error(error);
+                fetch(`${API_URL}${API_KEY}/${this.state.latitude},${this.state.longitude}?lang=pl&units=auto`)
+                .then(response => response.json())
+                .then(responseJson => {
+                  listData = [];
+                  temperaturesData = [];
+                  hourlyData = [];
+                  console.log(responseJson);
+                  responseJson.daily.data.forEach(element => {
+                    temperaturesData.push({
+                      day: this.getWeekDay(element.time),
+                      icon: element.icon,
+                      temperature: Math.round(element.apparentTemperatureHigh)
                     });
-            },
-            error => this.setState({ error: error.message }),
+                  });
+
+                  responseJson.hourly.data.forEach(this.getHourlyData);
+                  rows = this.dataSource.cloneWithRows(hourlyData);
+
+                  let today = responseJson.daily.data[0];
+                  let todaySummaryHorizontalList = [
+                    this.timestampToHours(today.sunriseTime),
+                    this.timestampToHours(today.sunsetTime),
+                    Math.round(today.pressure),
+                    today.windSpeed,
+                    Math.round(today.cloudCover * 100),
+                    today.humidity * 100,
+                    Math.round(today.temperatureHigh)
+                  ];
+
+                  let todaySummaryHorizontalListNames = [
+                    "Wschód słońca",
+                    "Zachód słońca",
+                    "Ciśnienie",
+                    "Wiatr",
+                    "Zachmurzenie",
+                    "Wilgotność",
+                    "Temperatura maks."
+                  ];
+
+                  let units = ["", "", "hPa", "km/h", "%", "%", "°C"];
+
+                  for (let element in todaySummaryHorizontalList) {
+                    let object = {
+                      name: todaySummaryHorizontalListNames[element],
+                      value: todaySummaryHorizontalList[element],
+                      unit: units[element]
+                    };
+
+                    listData.push(object);
+                  }
+
+                  Geocoder.from(this.state.latitude, this.state.longitude)
+                  .then(json => {
+                    var formatted_address = json.results[0].address_components;
+                    this.setState({
+                      country: formatted_address[5].long_name,
+                      city: formatted_address[2].long_name,
+                      street: formatted_address[1].long_name,
+                      number: formatted_address[0].long_name
+                    });
+                  }).catch(error => console.warn(error));
+                  this.setState({
+                    isLoading: false,
+                    refreshing: false,
+                    pollution: this.getHealthStatus(156),
+                    dataSource: responseJson.hourly.data,
+                    datat: responseJson.daily.summary,
+                    summary: responseJson.currently.summary,
+                    temperature: responseJson.currently.temperature,
+                    cloudCover: responseJson.currently.cloudCover,
+                    humidity: responseJson.currently.humidity,
+                    pressure: responseJson.currently.pressure,
+                    windGust: responseJson.currently.windGust,
+                    windSpeed: responseJson.currently.windSpeed,
+                    currentlyIcon: responseJson.daily.icon,
+                    forecast: responseJson.daily.data[1].summary + " Jutro " + responseJson.daily.data[2].summary,
+                    isNight: false//responseJson.currently.icon.indexOf("night") !== -1
+                  }, function () {
+                    console.log("Done.");
+                  }
+                );
+              }).catch(error => {
+                console.error(error);
+              });
+            }, error => this.setState({ error: error.message }),
             { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 }
-        );
-    }
+          );
+        }
 
     /* render() method inherited from React.Component must overload each component. */
     render() {
         const data = [{ key: "t", val: "t" }];
-
 
         /*
             Night mode, the style will change when the sunset time >= current hour. [todo]
@@ -387,7 +417,9 @@ export default class Home extends Component {
                         alignSelf: "center"
                     }}
                 >
-                    <Text>Ładowanie...</Text>
+                <Image
+                    source={require("../../assets/backgrounds/loading-screen.png")}
+                />
                     <ActivityIndicator />
                 </View>
             );
@@ -395,10 +427,10 @@ export default class Home extends Component {
 
         return (
           <View
-          style={{
-                  flex: 1,
-                        }}
-          >
+            style={{
+              flex: 1,
+              }}
+>
 
             <ScrollView
                 style={{ backgroundColor: displaySettings.backgroundColor }}
@@ -447,6 +479,25 @@ export default class Home extends Component {
                     source={displaySettings.location_icon}
                 />
 
+                <View style={styles.pollution_card}>
+
+                  <View style={styles.pollution_card_info}>
+                    <Text style={styles.pollution_heading}>Zanieczyszczenie Powietrza</Text>
+                    <View style={styles.pollution_status}>
+                      <Image
+                          source={IMAGES.icons.pollution[this.state.pollution.icon]}
+                          style={styles.pollution_icon}
+                      />
+                      <View style={styles.pollution_info}>
+                        <Text style={styles.pollution_status_badge}>Jakość powietrza</Text>
+                        <Text style={styles.pollution_status_text}>{this.state.pollution.status}</Text>
+                        <Text style={styles.pollution_status_badge}>Pyły zawieszone</Text>
+                        <Text style={styles.pollution_status_text}>PM2.5 | 66.9 µg/m³</Text>
+                      </View>
+                    </View>
+                  </View>
+
+                </View>
                 {/* Days List Horizontally */}
 
                 <FlatList
@@ -477,43 +528,44 @@ export default class Home extends Component {
                     horizontal={false}
                     renderRow={data => <this.renderHourlyRow {...data} />}
                 />
-
             </ScrollView>
             <View style={{
-              flexDirection: 'row-reverse',
-              justifyContent: 'center',
-              width: '100%',
-              height: 70,
-              borderTopWidth: 1,
-              borderColor: 'black',}}>
-            <TouchableOpacity style={{
-              flex:1,
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'center',}}
-             //onPress={() => this.goToScreen('Favorites')}
-             >
-            <Image
-            style={{width:30,height: 30,}}
-              source={require('../../images/connect.png')}
-              />
-            </TouchableOpacity>
-            <TouchableOpacity style={{
-              flex:1,
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'center',}}
-              // onPress={() =>this.goToScreen('Home')}
+                flexDirection: 'row-reverse',
+                justifyContent: 'center',
+                width: '100%',
+                height: 70,
+                borderTopWidth: 1,
+                borderColor: 'black',}}>
+              <TouchableOpacity style={{
+                flex:1,
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'center',}}
+               onPress={() =>  this.props.navigation.navigate('Favorites')}
                >
-            <Image
-            style={{width:30,height: 30,}}
-            source={require('../../images/home.png')}
-              />
+               <Text>xxx</Text>
+              <Image
+              style={{width:30,height: 30,}}
+                source={require('../../images/connect.png')}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity style={{
+                flex:1,
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'center',}}
+                onPress={() => this.goToScreen('Home')}
+                 >
+                 <Text>xxx</Text>
+              <Image
+              style={{width:30,height: 30,}}
+              source={require('../../images/home.png')}
+                />
 
-               </TouchableOpacity>
+                 </TouchableOpacity>
 
-            </View>
-            </View>
+              </View>
+              </View>
         );
     }
 }

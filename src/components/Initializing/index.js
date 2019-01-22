@@ -6,15 +6,14 @@ import {
   AsyncStorage
 } from 'react-native'
 
-import { goToAuth, goHome } from '../../navigation'
+import { goHome } from '../../navigation'
 
 export default class Initializing extends React.Component {
   async componentDidMount() {
     try {
-        goToAuth()
+        goHome();
     } catch (err) {
-      console.log('error: ', err)
-      goToAuth()
+      console.log('error: ', err);
     }
   }
 

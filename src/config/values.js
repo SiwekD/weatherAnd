@@ -80,6 +80,13 @@ exports.IMAGES = {
             "partly-cloudy-day": require("../assets/icons/weather-icons/partly-cloudy-day.svg"),
             "clear-night": require("../assets/icons/weather-icons/clear-night.svg"),
             rain: require("../assets/icons/weather-icons/rain.svg")
+        },
+        pollution: {
+          "ic-face-1-green": require("../assets/icons/pollution-icons/ic-face-1-green.svg"),
+          "ic-face-2-yellow": require("../assets/icons/pollution-icons/ic-face-2-yellow.svg"),
+          "ic-face-3-orange": require("../assets/icons/pollution-icons/ic-face-3-orange.svg"),
+          "ic-face-4-red": require("../assets/icons/pollution-icons/ic-face-4-red.svg"),
+          "ic-face-5-purple": require("../assets/icons/pollution-icons/ic-face-5-purple.svg"),
         }
     }
 };
