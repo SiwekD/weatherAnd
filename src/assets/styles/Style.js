@@ -97,7 +97,7 @@ export const styles = {
 				flexWrap: 'wrap',
 				flex: 1,
 				marginTop: 15,
-				marginTop: 5,
+	
 			},
 			pollution_status_badge: {
 				fontSize: 14,
