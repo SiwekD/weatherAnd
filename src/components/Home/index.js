@@ -541,9 +541,8 @@ export default class Home extends Component<Props> {
                 flexDirection: 'row',
                 alignItems: 'center',
                 justifyContent: 'center',}}
-               onPress={() =>  this.props.navigation.navigate('Favorites')}
+               //onPress={() =>  this.props.navigation.navigate('Favorites')}
                >
-               <Text>xxx</Text>
               <Image
               style={{width:30,height: 30,}}
                 source={require('../../images/connect.png')}
@@ -554,9 +553,8 @@ export default class Home extends Component<Props> {
                 flexDirection: 'row',
                 alignItems: 'center',
                 justifyContent: 'center',}}
-                onPress={() => this.goToScreen('Home')}
+                //onPress={() => this.goToScreen('Home')}
                  >
-                 <Text>xxx</Text>
               <Image
               style={{width:30,height: 30,}}
               source={require('../../images/home.png')}
